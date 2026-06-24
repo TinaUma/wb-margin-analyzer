@@ -168,4 +168,7 @@ Always respond in the user's language.
 - Save useful patterns to project memory
 
 <!-- DYNAMIC:START -->
+## Current State
+Session: #1 (active) | Branch: master | Version: 1.5.6
+Tasks: 0/0 done, 0 active, 0 blocked
 <!-- DYNAMIC:END -->
