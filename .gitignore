@@ -1,0 +1,14 @@
+# TAUSIK — local DB and generated files, not for version control
+.tausik/
+
+# Python
+__pycache__/
+*.py[cod]
+*.env
+.env
+venv/
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db

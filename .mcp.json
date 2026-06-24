@@ -1,0 +1,31 @@
+{
+  "mcpServers": {
+    "codebase-rag": {
+      "type": "stdio",
+      "command": "${CLAUDE_PROJECT_DIR:-.}/.tausik/venv/Scripts/python.exe",
+      "args": [
+        "${CLAUDE_PROJECT_DIR:-.}/.claude/mcp/codebase-rag/server.py",
+        "--project",
+        "${CLAUDE_PROJECT_DIR:-.}"
+      ]
+    },
+    "tausik-project": {
+      "type": "stdio",
+      "command": "${CLAUDE_PROJECT_DIR:-.}/.tausik/venv/Scripts/python.exe",
+      "args": [
+        "${CLAUDE_PROJECT_DIR:-.}/.claude/mcp/project/server.py",
+        "--project",
+        "${CLAUDE_PROJECT_DIR:-.}"
+      ]
+    },
+    "tausik-brain": {
+      "type": "stdio",
+      "command": "${CLAUDE_PROJECT_DIR:-.}/.tausik/venv/Scripts/python.exe",
+      "args": [
+        "${CLAUDE_PROJECT_DIR:-.}/.claude/mcp/brain/server.py",
+        "--project",
+        "${CLAUDE_PROJECT_DIR:-.}"
+      ]
+    }
+  }
+}

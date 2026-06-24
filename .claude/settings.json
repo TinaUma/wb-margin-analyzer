@@ -1,0 +1,230 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.tausik/tausik:*)",
+      "Bash(.tausik/tausik.cmd:*)",
+      "Bash(python .claude/scripts/project.py:*)",
+      "Bash(pytest:*)",
+      "Bash(git:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -X utf8 ${CLAUDE_PROJECT_DIR}/.tausik-lib/scripts/hooks/task_gate.py",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -X utf8 ${CLAUDE_PROJECT_DIR}/.tausik-lib/scripts/hooks/scope_write_gate.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -X utf8 ${CLAUDE_PROJECT_DIR}/.tausik-lib/scripts/hooks/memory_pretool_block.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -X utf8 ${CLAUDE_PROJECT_DIR}/.tausik-lib/scripts/hooks/secret_scan.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -X utf8 ${CLAUDE_PROJECT_DIR}/.tausik-lib/scripts/hooks/bash_firewall.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "WebSearch|WebFetch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -X utf8 ${CLAUDE_PROJECT_DIR}/.tausik-lib/scripts/hooks/brain_search_proactive.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "if": "Bash(git push *)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -X utf8 ${CLAUDE_PROJECT_DIR}/.tausik-lib/scripts/hooks/git_push_gate.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -X utf8 ${CLAUDE_PROJECT_DIR}/.tausik-lib/scripts/hooks/auto_format.py",
+            "timeout": 15
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -X utf8 ${CLAUDE_PROJECT_DIR}/.tausik-lib/scripts/hooks/memory_posttool_audit.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__tausik-project__tausik_task_done",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -X utf8 ${CLAUDE_PROJECT_DIR}/.tausik-lib/scripts/hooks/task_done_verify.py",
+            "timeout": 6
+          }
+        ]
+      },
+      {
+        "matcher": "WebFetch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -X utf8 ${CLAUDE_PROJECT_DIR}/.tausik-lib/scripts/hooks/brain_post_webfetch.py",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -X utf8 ${CLAUDE_PROJECT_DIR}/.tausik-lib/scripts/hooks/task_call_counter.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -X utf8 ${CLAUDE_PROJECT_DIR}/.tausik-lib/scripts/hooks/posttool_usage.py",
+            "timeout": 4
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|Bash|Read|Grep|Glob|WebFetch|WebSearch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -X utf8 ${CLAUDE_PROJECT_DIR}/.tausik-lib/scripts/hooks/activity_event.py",
+            "timeout": 2
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Grep|Bash|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -X utf8 ${CLAUDE_PROJECT_DIR}/.tausik-lib/scripts/hooks/tool_output_truncation_nudge.py",
+            "timeout": 3
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -X utf8 ${CLAUDE_PROJECT_DIR}/.tausik-lib/scripts/hooks/task_cost_budget_check.py",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -X utf8 ${CLAUDE_PROJECT_DIR}/.tausik-lib/scripts/hooks/session_start.py",
+            "timeout": 6
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -X utf8 ${CLAUDE_PROJECT_DIR}/.tausik-lib/scripts/hooks/user_prompt_submit.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -X utf8 ${CLAUDE_PROJECT_DIR}/.tausik-lib/scripts/hooks/keyword_detector.py",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "python -X utf8 ${CLAUDE_PROJECT_DIR}/.tausik-lib/scripts/hooks/session_cleanup_check.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -X utf8 ${CLAUDE_PROJECT_DIR}/.tausik-lib/scripts/hooks/session_metrics.py --auto --record 2>&1 || true"
+          }
+        ]
+      }
+    ]
+  }
+}
