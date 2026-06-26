@@ -19,8 +19,9 @@ async def get_current_user(
         user_id = decode_access_token(token)
     except ExpiredSignatureError:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token has expired",
+            headers={"WWW-Authenticate": 'Bearer error="invalid_token"'},
         )
     except JWTError:
         raise HTTPException(
@@ -28,7 +29,15 @@ async def get_current_user(
             detail="Invalid token",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    user = await db.scalar(select(User).where(User.id == int(user_id)))
+    try:
+        uid = int(user_id)
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    user = await db.scalar(select(User).where(User.id == uid))
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
