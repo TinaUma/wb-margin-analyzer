@@ -1,0 +1,12 @@
+.env
+.git
+.tausik
+.tausik-lib
+.claude
+__pycache__
+*.py[cod]
+.pytest_cache
+.ruff_cache
+frontend/
+*.md
+data/
