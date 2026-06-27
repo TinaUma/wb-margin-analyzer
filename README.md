@@ -1,8 +1,8 @@
 # WB Margin Analyzer
 
-> **AI-powered margin analyzer for WB sellers. Upload cost+sales Excel → margin analysis + Claude AI interpretation.**
+> **AI-инструмент для анализа маржинальности товаров на Wildberries**
 
-Инструмент для продавцов Wildberries: загружаете два Excel-файла (закупки + продажи) — получаете цветную таблицу маржинальности, AI-интерпретацию от Claude и Excel-отчёт за один клик.
+Продавцы на WB часто работают вслепую: загружают товар, платят комиссию и логистику — и не знают, зарабатывают они или теряют деньги. Этот инструмент решает проблему: загружаете два Excel-файла (закупки + продажи) и за секунды получаете полную картину — какие товары прибыльные, какие убыточные, и что с этим делать.
 
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
@@ -15,165 +15,168 @@
 
 ---
 
-## Quickstart
+## Какую задачу решает
+
+Продавец на Wildberries работает в условиях сложного ценообразования: цена продажи минус комиссия WB (15–25%) минус логистика туда и обратно минус закупочная стоимость. При высоком проценте возвратов товар может уходить в минус незаметно.
+
+**Боль:** таблица в Excel с 200+ позициями, и непонятно — где прибыль, а где слив бюджета.
+
+**Решение:** загрузил два файла → получил цветную таблицу с AI-диагнозом → сразу видишь, какие 50 товаров тянут вниз и что конкретно с ними делать.
+
+---
+
+## Скриншоты
+
+### Загрузка файлов
+![Upload](docs/screenshots/1%20upload.PNG)
+
+### Дашборд — таблица маржинальности
+![Dashboard](docs/screenshots/2%20dashboard.PNG)
+
+### Карточка товара (все метрики)
+![Product Card](docs/screenshots/3%20modalwindow%20wb%20card%20item.PNG)
+
+### What If — симулятор цены
+![What If](docs/screenshots/4%20what%20if.PNG)
+
+### AI-интерпретация от Claude
+![AI Interpretation](docs/screenshots/5%20AI-%D0%B8%D0%BD%D1%82%D0%B5%D1%80%D0%BF%D1%80%D0%B5%D1%82%D0%B0%D1%86%D0%B8%D1%8F.PNG)
+
+### AI-чат с аналитиком
+![AI Chat](docs/screenshots/6%20ai%20chat.PNG)
+
+### Excel-отчёт с цветными строками
+![Excel](docs/screenshots/7-1%20exel.PNG)
+
+### История анализов
+![History](docs/screenshots/8%20history.PNG)
+
+---
+
+## Быстрый старт
 
 ```bash
-git clone https://github.com/your-username/wb-margin-analyzer.git
+git clone https://github.com/TinaUma/wb-margin-analyzer.git
 cd wb-margin-analyzer
-cp .env.example .env          # add your SECRET_KEY and ANTHROPIC_API_KEY
+cp .env.example .env          # добавьте SECRET_KEY и ANTHROPIC_API_KEY
 docker compose up --build
 ```
 
-- Frontend → **http://localhost:5173**
+- Приложение → **http://localhost:5173**
 - API Docs → **http://localhost:8000/docs**
 
-> `ANTHROPIC_API_KEY` is optional — the app starts without it, AI endpoints return `503` with a clear message.
+> `ANTHROPIC_API_KEY` необязателен — приложение запускается без него, AI-эндпоинты возвращают `503` с понятным сообщением.
 
 ---
 
-## Architecture
+## Как это работает
 
-```mermaid
-graph TD
-    B[Browser<br/>React + Vite] -->|HTTP| N[Nginx :5173]
-    N -->|proxy /api| F[FastAPI :8000]
-    F -->|async ORM| P[(PostgreSQL<br/>named volume)]
-    F -->|BackgroundTask| W[Analysis Worker<br/>pandas + openpyxl]
-    W --> P
-    F -->|anthropic SDK| C[Claude API<br/>claude-sonnet-4-6]
-    F -->|openpyxl| X[Excel Export]
+```
+Пользователь загружает 2 .xlsx файла
+       ↓
+FastAPI валидирует структуру колонок (openpyxl)
+       ↓
+BackgroundTask: pandas считает маржу по каждому товару
+  формула: (выручка − комиссия − логистика − закупка) / выручка × 100%
+  возврат логистики = 1.5 × базовая (WB-тариф)
+       ↓
+Результат пишется в PostgreSQL
+       ↓
+Frontend опрашивает статус каждые 2 сек → рендерит таблицу
+       ↓
+Claude Sonnet 4.6 генерирует: Диагноз / Рекомендации / Риски
+       ↓
+Пользователь скачивает .xlsx с цветными строками и AI-листом
 ```
 
-**Request flow:**
-1. User uploads two `.xlsx` files → FastAPI validates columns/format → returns `analysis_id`
-2. Background worker parses files, calculates margin, writes results to DB
-3. Frontend polls `GET /analyses/{id}` every 2 s until `status: done`
-4. User requests AI interpretation → Claude generates Диагноз / Рекомендации / Риски
-5. Follow-up chat uses a sliding window of the last 5 messages as context
-
 ---
 
-## Features
+## Функциональность
 
-| Feature | Details |
+| Функция | Детали |
 |---|---|
-| **Async processing** | Analysis runs in a FastAPI `BackgroundTask` — upload returns `202` instantly, frontend polls for completion |
-| **What If simulator** | Client-side price/cost sliders recalculate margin in real time — zero extra API calls |
-| **Claude AI chat** | `POST /analyses/{id}/interpret` → 3-section report; `POST /analyses/{id}/chat` → stateful Q&A with last-5-message context window |
-| **JWT auth** | Register/login, Bearer token, `401` on expiry redirects to login page |
-| **Color-coded Excel export** | `GET /analyses/{id}/export` → `.xlsx` with green/yellow/red rows + AI interpretation on Sheet 2 |
-| **pytest coverage** | 60 tests across all layers (validator, analytics engine, all API endpoints) |
+| **Цветная таблица** | Зелёная ≥25% / Жёлтая 10–25% / Красная <10% |
+| **Фильтр по зоне** | Кнопки с счётчиком товаров в каждой зоне |
+| **Сортировка** | Клик на заголовок: маржа, прибыль, цена |
+| **Карточка товара** | Модалка с полными цифрами по клику на строку |
+| **What If симулятор** | Слайдеры цены/себестоимости — пересчёт в реальном времени |
+| **AI-интерпретация** | Claude генерирует диагноз с таблицами и конкретными цифрами |
+| **AI-чат** | Контекстные Q&A, скользящее окно из 5 сообщений |
+| **Экспорт Excel** | Цветные строки + лист с AI-интерпретацией |
+| **История** | Все прошлые анализы с датой и статусом |
+| **Асинхронность** | Upload возвращает 202 мгновенно, анализ в фоне |
 
 ---
 
-## Tech Stack
+## Стек
 
-### Backend
+### Бэкенд
 - **FastAPI** (async) + **SQLAlchemy 2.0** async ORM
-- **Alembic** migrations (run automatically on container start)
-- **pandas** for Excel parsing and margin calculations
-- **openpyxl** for file validation and Excel export
+- **Alembic** — миграции (запускаются автоматически при старте контейнера)
+- **pandas** — парсинг Excel и расчёт маржи
+- **openpyxl** — валидация файлов и цветной Excel-экспорт
 - **anthropic** Python SDK (`AsyncAnthropic`, `claude-sonnet-4-6`)
-- **python-jose** + **bcrypt** for JWT auth
+- **python-jose** + **bcrypt** — JWT-авторизация
 
-### Frontend
+### Фронтенд
 - **React 18** + **TypeScript** + **Vite**
-- **Tailwind CSS v3** for styling
-- **React Router v6** for SPA routing
-- **Axios** with interceptors (auto-attach Bearer token, redirect on 401)
+- **Tailwind CSS v3**
+- **React Router v6**
+- **Axios** с interceptors (Bearer токен, редирект на /login при 401)
 
-### Infrastructure
-- **PostgreSQL 16** with named volume
-- **Docker Compose** — one-command startup
-- **Nginx** — serves built React SPA, proxies `/api` to FastAPI
-
----
-
-## API Overview
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/v1/auth/register` | Register new user |
-| `POST` | `/api/v1/auth/login` | Login, get JWT |
-| `POST` | `/api/v1/uploads/validate-purchases` | Validate purchases file |
-| `POST` | `/api/v1/uploads/validate-sales` | Validate sales file |
-| `POST` | `/api/v1/analyses` | Create analysis (async, 202) |
-| `GET` | `/api/v1/analyses/{id}` | Poll status + results |
-| `GET` | `/api/v1/analyses` | History list |
-| `POST` | `/api/v1/analyses/{id}/interpret` | Generate AI interpretation |
-| `POST` | `/api/v1/analyses/{id}/chat` | Follow-up Q&A with Claude |
-| `GET` | `/api/v1/analyses/{id}/export` | Download `.xlsx` report |
-
-Full interactive docs: **http://localhost:8000/docs**
+### Инфраструктура
+- **PostgreSQL 16** с named volume
+- **Docker Compose** — запуск одной командой
+- **Nginx** — раздаёт React SPA, проксирует `/api` → FastAPI
 
 ---
 
-## Domain Note — Return Logistics Formula
-
-Return logistics is calculated as `1.5 × base_logistics` per returned unit (Wildberries charges a higher rate for returns). The purchase cost uses `(sold - returns)` units, not `sold`:
-
-```python
-purchase_cost = purchase_price * (sold - returns)  # ✓ correct
-# purchase_cost = purchase_price * sold             # ✗ overstates cost
-```
-
-This matches WB's actual payout structure and avoids inflating the cost basis for products with high return rates.
-
----
-
-## Local Development (without Docker)
+## Тесты
 
 ```bash
-# Backend
-python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt -r requirements-dev.txt
-cp .env.example .env   # set DATABASE_URL to your local PostgreSQL
-alembic upgrade head
-uvicorn backend.main:app --reload
-
-# Frontend
-cd frontend
-npm install
-npm run dev
+pytest -v   # 60 тестов
 ```
 
-Run tests:
-
-```bash
-pytest -v   # 60 tests
-```
+Покрыто: валидатор файлов, движок расчёта маржи, все API-эндпоинты (upload, analyses, AI, export), авторизация.
 
 ---
 
-## Environment Variables
+## Переменные окружения
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | ✅ | PostgreSQL async URL (`postgresql+asyncpg://...`) |
-| `SECRET_KEY` | ✅ | JWT signing secret (`openssl rand -hex 32`) |
-| `ANTHROPIC_API_KEY` | ☑ optional | Claude API key — app runs without it, AI returns 503 |
-| `CORS_ORIGINS` | ☑ optional | JSON list of allowed origins (default: `["http://localhost:5173"]`) |
+| Переменная | Обязательна | Описание |
+|---|---|---|
+| `DATABASE_URL` | ✅ | PostgreSQL async URL |
+| `SECRET_KEY` | ✅ | JWT секрет (`openssl rand -hex 32`) |
+| `ANTHROPIC_API_KEY` | ☑ опционально | Ключ Claude API — без него AI возвращает 503 |
+| `CORS_ORIGINS` | ☑ опционально | JSON-список origin'ов |
 
 ---
 
-## Project Structure
+## Документация
+
+- [Техническое задание (PDF)](docs/WB%20Margin%20Analyzer%20—%20ТЗ%20v2.0.pdf) — полное ТЗ проекта
+- [API Docs](http://localhost:8000/docs) — интерактивная Swagger-документация
+
+---
+
+## Структура проекта
 
 ```
 wb-margin-analyzer/
 ├── backend/
-│   ├── api/v1/          # FastAPI routers (auth, uploads, analyses)
+│   ├── api/v1/          # FastAPI роутеры (auth, uploads, analyses)
 │   ├── core/            # Config (pydantic-settings)
-│   ├── models/          # SQLAlchemy models
-│   ├── schemas/         # Pydantic request/response schemas
-│   └── services/        # Business logic (analysis, AI, export, validator)
+│   ├── models/          # SQLAlchemy модели
+│   ├── schemas/         # Pydantic схемы
+│   └── services/        # Бизнес-логика (analysis, AI, export, validator)
 ├── frontend/
 │   └── src/
-│       ├── api/         # Axios client + typed API functions
-│       ├── components/  # FileDropzone, MarginTable, WhatIfPanel, ChatBlock
+│       ├── api/         # Axios клиент + типизированные функции
+│       ├── components/  # MarginTable, WhatIfPanel, ChatBlock, FileDropzone
 │       ├── context/     # AuthContext (JWT)
 │       └── pages/       # Login, Register, Upload, Dashboard, History
-├── tests/               # pytest — 60 tests
-├── alembic/             # DB migrations
-├── docker-compose.yml
-└── .env.example
+├── tests/               # pytest — 60 тестов
+├── docs/                # Скриншоты + ТЗ
+├── alembic/             # Миграции БД
+└── docker-compose.yml
 ```
