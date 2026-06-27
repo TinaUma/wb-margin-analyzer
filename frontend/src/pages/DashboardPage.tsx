@@ -18,6 +18,7 @@ export default function DashboardPage() {
   const [products, setProducts] = useState<ProductResult[]>([])
   const [interpretation, setInterpretation] = useState<string | null>(null)
   const [interpreting, setInterpreting] = useState(false)
+  const [aiUnavailable, setAiUnavailable] = useState(false)
   const [tab, setTab] = useState<'table' | 'whatif' | 'chat'>('table')
 
   useEffect(() => {
@@ -51,10 +52,16 @@ export default function DashboardPage() {
 
   async function handleInterpret() {
     setInterpreting(true)
+    setAiUnavailable(false)
     try {
       const { interpretation: text } = await interpretAnalysis(analysisId)
       setInterpretation(text)
       setTab('chat')
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } }).response?.status
+      if (status === 503) {
+        setAiUnavailable(true)
+      }
     } finally {
       setInterpreting(false)
     }
@@ -98,7 +105,7 @@ export default function DashboardPage() {
 
             {/* Action buttons */}
             <div className="flex gap-3">
-              {!interpretation && (
+              {!interpretation && !aiUnavailable && (
                 <button
                   onClick={handleInterpret}
                   disabled={interpreting}
@@ -106,6 +113,12 @@ export default function DashboardPage() {
                 >
                   {interpreting ? 'AI анализирует…' : '✨ Получить AI-интерпретацию'}
                 </button>
+              )}
+              {aiUnavailable && (
+                <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-500">
+                  💡 <span className="font-medium">AI-интерпретация</span> — функция реализована, но недоступна в демо-режиме.
+                  Добавьте <code className="bg-gray-100 px-1 rounded">ANTHROPIC_API_KEY</code> для активации.
+                </div>
               )}
               <button
                 onClick={handleExport}

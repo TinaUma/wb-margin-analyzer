@@ -66,6 +66,7 @@ docker compose up --build
 - API Docs → **http://localhost:8000/docs**
 
 > `ANTHROPIC_API_KEY` is optional — the app starts without it; AI endpoints return `503` with a clear message.
+> **Live demo:** AI features are disabled (Anthropic API blocks RU server IPs). Screenshots of working AI are in the section above.
 
 ---
 
