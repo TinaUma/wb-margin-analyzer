@@ -4,6 +4,8 @@
 
 Продавцы на WB часто работают вслепую: загружают товар, платят комиссию и логистику — и не знают, зарабатывают они или теряют деньги. Этот инструмент решает проблему: загружаете два Excel-файла (закупки + продажи) и за секунды получаете полную картину — какие товары прибыльные, какие убыточные, и что с этим делать.
 
+**🌐 Live demo:** [wb.tinacodes.space](https://wb.tinacodes.space) — `demo@demo.com` / `demo1234`
+
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)

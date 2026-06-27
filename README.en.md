@@ -4,6 +4,8 @@
 
 Russian e-commerce sellers on Wildberries face a real challenge: the platform charges a 15–25% commission, plus two-way logistics fees, plus return logistics at 1.5× the base rate. A product that looks profitable at first glance can easily be running at a loss. This tool makes the invisible visible — upload two Excel files, get a complete margin breakdown with AI-generated recommendations in seconds.
 
+**🌐 Live demo:** [wb.tinacodes.space](https://wb.tinacodes.space) — `demo@demo.com` / `demo1234`
+
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
